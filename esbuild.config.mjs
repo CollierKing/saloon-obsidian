@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import { copyFileSync } from "fs";
 
 const banner =
 `/*
@@ -10,6 +11,17 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+
+// Plugin to copy WASM file
+const copyWasmPlugin = {
+	name: 'copy-wasm',
+	setup(build) {
+		build.onEnd(() => {
+			copyFileSync('node_modules/sql.js/dist/sql-wasm.wasm', 'sql-wasm.wasm');
+			console.log('Copied sql-wasm.wasm from node_modules');
+		});
+	},
+};
 
 const context = await esbuild.context({
 	banner: {
@@ -31,7 +43,10 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtins],
+		...builtins,
+		// Add node: protocol variants for built-in modules
+		...builtins.map(m => `node:${m}`)
+	],
 	format: "cjs",
 	target: "es2018",
 	logLevel: "info",
@@ -39,6 +54,7 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	minify: prod,
+	plugins: [copyWasmPlugin],
 });
 
 if (prod) {

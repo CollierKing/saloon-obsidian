@@ -6,3 +6,1118 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+/* Utility classes for visibility */
+.saloon-hidden {
+  display: none !important;
+}
+
+.saloon-visible {
+  display: block;
+}
+
+.saloon-visible-flex {
+  display: flex;
+}
+
+.saloon-visible-inline {
+  display: inline;
+}
+
+.saloon-full-width {
+  width: 100%;
+}
+
+/* Saloon Extract Styles */
+.saloon-extract-container {
+  margin: 1em 0;
+  padding: 1.5em;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.saloon-extract-title {
+  margin-top: 0;
+  margin-bottom: 1em;
+  color: var(--text-accent);
+  font-size: 1.3em;
+  border-bottom: 2px solid var(--interactive-accent);
+  padding-bottom: 0.5em;
+}
+
+.saloon-config-section {
+  margin-bottom: 1em;
+}
+
+.saloon-input-group {
+  margin-bottom: 1em;
+}
+
+.saloon-label {
+  display: block;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.saloon-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: 0.95em;
+}
+
+.saloon-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+select.saloon-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  min-height: 38px;
+  line-height: 1.4;
+}
+
+/* Slider */
+.saloon-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.saloon-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--background-modifier-border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.saloon-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--interactive-accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.saloon-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--interactive-accent);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.saloon-slider-value {
+  min-width: 50px;
+  text-align: right;
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.saloon-hint {
+  display: block;
+  margin-top: 0.25em;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.saloon-button-section {
+  margin-bottom: 1em;
+}
+
+.saloon-extract-button,
+.saloon-export-button {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.saloon-extract-button:hover,
+.saloon-export-button:hover {
+  opacity: 0.8;
+}
+
+.saloon-extract-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Progress bar */
+.saloon-progress-container {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.saloon-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.saloon-progress-fill {
+  height: 100%;
+  background: var(--interactive-accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.saloon-progress-text {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.saloon-extract-results {
+  margin-top: 1em;
+}
+
+.saloon-terms-list {
+  margin-top: 0.5em;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.saloon-term-item {
+  margin-bottom: 1em;
+  padding: 0.75em;
+  background: var(--background-primary);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 4px;
+}
+
+.saloon-term-item strong {
+  display: block;
+  font-size: 1.1em;
+  color: var(--text-accent);
+  margin-bottom: 0.5em;
+}
+
+.saloon-term-item p {
+  margin: 0.5em 0;
+  color: var(--text-normal);
+}
+
+.saloon-term-item em {
+  display: block;
+  margin-top: 0.5em;
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.saloon-term-header {
+  margin-bottom: 0.5em;
+}
+
+.saloon-term-source-text {
+  display: block;
+  margin-top: 0.5em;
+  color: var(--text-faint);
+}
+
+.saloon-export-button {
+  margin-top: 1em;
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+}
+
+.saloon-error {
+  color: var(--text-error);
+  padding: 0.5em;
+  background: var(--background-modifier-error);
+  border-radius: 4px;
+  margin-top: 0.5em;
+}
+
+.saloon-status-error {
+  color: var(--text-muted);
+}
+
+.saloon-results-header {
+  margin-bottom: 1em;
+}
+
+.saloon-results-header h4 {
+  margin: 0 0 0.25em 0;
+  color: var(--text-accent);
+}
+
+.saloon-source-count {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.saloon-term-source {
+  margin-top: 0.5em;
+  padding-top: 0.5em;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.saloon-term-source small {
+  color: var(--text-faint);
+  font-size: 0.85em;
+}
+
+.saloon-export-section {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 1em;
+  padding-top: 1em;
+  border-top: 2px solid var(--background-modifier-border);
+}
+
+.saloon-processing-info {
+  padding: 0.75em;
+  background: var(--background-primary-alt);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 4px;
+  margin-bottom: 1em;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+/* Approval Actions */
+.saloon-actions-container {
+  padding: 1em;
+  background: var(--background-secondary);
+  border-radius: 8px;
+}
+
+.saloon-actions-title {
+  margin: 0 0 0.5em 0;
+  color: var(--text-accent);
+  border-bottom: 2px solid var(--interactive-accent);
+  padding-bottom: 0.5em;
+}
+
+.saloon-actions-count {
+  margin: 0 0 1em 0;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.saloon-empty-message {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.saloon-actions-list {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.saloon-action-card {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 1em;
+  margin-bottom: 1em;
+}
+
+.saloon-action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5em;
+}
+
+.saloon-action-header strong {
+  color: var(--text-normal);
+  font-size: 1.1em;
+}
+
+.saloon-action-badge {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  text-transform: uppercase;
+}
+
+.saloon-action-definition {
+  margin: 0.5em 0;
+  color: var(--text-normal);
+}
+
+.saloon-action-context {
+  display: block;
+  margin: 0.5em 0;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.saloon-action-source {
+  display: block;
+  color: var(--text-faint);
+  font-size: 0.85em;
+  margin-top: 0.5em;
+}
+
+.saloon-action-buttons {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 1em;
+  padding-top: 0.75em;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.saloon-approve-button {
+  background: var(--interactive-success);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.saloon-approve-button:hover {
+  opacity: 0.9;
+}
+
+.saloon-reject-button {
+  background: var(--background-modifier-error);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.saloon-reject-button:hover {
+  opacity: 0.9;
+}
+
+.saloon-approval-button {
+  background: var(--interactive-success);
+  color: white;
+}
+
+/* Toolbar Styles */
+.saloon-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  padding: 1em;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  margin-bottom: 1em;
+  align-items: center;
+}
+
+.saloon-filter-group,
+.saloon-action-group,
+.saloon-selection-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.saloon-filter-label {
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.saloon-filter-input {
+  padding: 6px 10px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+  min-width: 180px;
+}
+
+.saloon-filter-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+.saloon-action-select {
+  padding: 6px 10px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.saloon-select-all-button {
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.saloon-select-all-button:hover {
+  background: var(--interactive-hover);
+}
+
+.saloon-selection-count {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  min-width: 80px;
+}
+
+.saloon-term-checkbox {
+  margin-right: 8px;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.saloon-submit-selected-button {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.saloon-submit-selected-button:hover {
+  opacity: 0.9;
+}
+
+/* Pending Items Section */
+.saloon-pending-section {
+  margin-bottom: 1.5em;
+  padding: 1em;
+  background: var(--background-primary-alt);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+}
+
+.saloon-pending-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+.saloon-pending-header h4 {
+  margin: 0;
+  color: var(--text-accent);
+}
+
+.saloon-pending-badge {
+  background: var(--text-accent);
+  color: var(--text-on-accent);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.saloon-pending-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.saloon-pending-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75em;
+  background: var(--background-primary);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 4px;
+  margin-bottom: 0.5em;
+}
+
+.saloon-pending-info {
+  flex: 1;
+}
+
+.saloon-pending-term {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.saloon-pending-action-type {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-left: 0.5em;
+}
+
+.saloon-pending-actions {
+  display: flex;
+  gap: 0.5em;
+}
+
+.saloon-pending-count {
+  color: var(--text-muted);
+  font-weight: normal;
+  font-size: 0.9em;
+}
+
+.saloon-pending-checkbox {
+  margin-right: 12px;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.saloon-bulk-actions {
+  display: flex;
+  gap: 0.5em;
+  margin-left: auto;
+}
+
+/* Bulk action buttons */
+.saloon-bulk-approve,
+.saloon-bulk-reject {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.saloon-bulk-approve {
+  background: var(--interactive-success);
+  color: white;
+}
+
+.saloon-bulk-reject {
+  background: var(--background-modifier-error);
+  color: white;
+}
+
+.saloon-bulk-approve:disabled,
+.saloon-bulk-reject:disabled {
+  background: var(--background-modifier-border);
+  color: var(--text-faint);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.saloon-bulk-approve:not(:disabled):hover,
+.saloon-bulk-reject:not(:disabled):hover {
+  opacity: 0.85;
+}
+
+/* Combobox styling */
+.saloon-combobox {
+  min-width: 140px;
+}
+
+/* Input wrapper with clear button */
+.saloon-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.saloon-input-wrapper .saloon-filter-input {
+  padding-right: 24px;
+}
+
+.saloon-input-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.saloon-input-clear:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* Card styles */
+.saloon-pending-card {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.saloon-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.saloon-card-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.saloon-card-term {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-normal);
+  font-size: 0.95em;
+}
+
+.saloon-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.saloon-btn-approve,
+.saloon-btn-reject {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.saloon-btn-approve {
+  background: var(--interactive-success);
+  color: white;
+}
+
+.saloon-btn-reject {
+  background: var(--background-modifier-error);
+  color: white;
+}
+
+.saloon-btn-approve:hover,
+.saloon-btn-reject:hover {
+  opacity: 0.85;
+}
+
+.saloon-card-action-icon {
+  font-size: 0.9em;
+  opacity: 0.7;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.saloon-card-source {
+  color: var(--text-faint);
+  font-size: 0.75em;
+  margin-top: 4px;
+  margin-left: 26px;
+}
+
+.saloon-card-def {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.saloon-card-def.is-truncated {
+  cursor: pointer;
+  position: relative;
+  padding-right: 24px;
+}
+
+.saloon-card-def.is-truncated::after {
+  content: '▾';
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  font-size: 0.8em;
+  color: var(--text-faint);
+  transition: transform 0.15s;
+}
+
+.saloon-card-def.is-truncated.is-expanded::after {
+  transform: rotate(180deg);
+}
+
+.saloon-card-def.is-truncated:hover {
+  background: var(--background-modifier-hover);
+}
+
+.saloon-card-context-line {
+  margin-top: 6px;
+  margin-left: 26px;
+  color: var(--text-faint);
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+/* Edit button and container */
+.saloon-edit-container {
+  margin: 1em 0;
+  padding: 0.5em 0;
+}
+
+.saloon-edit-button {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.saloon-edit-button:hover {
+  opacity: 0.9;
+}
+
+.saloon-edit-button::before {
+  content: '✎';
+}
+
+/* Modal Overlay */
+.saloon-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.saloon-modal {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 1.5em;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.saloon-modal h3 {
+  margin: 0 0 1em 0;
+  color: var(--text-accent);
+  border-bottom: 2px solid var(--interactive-accent);
+  padding-bottom: 0.5em;
+}
+
+.saloon-modal-group {
+  margin-bottom: 1em;
+}
+
+.saloon-modal-group label {
+  display: block;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.saloon-modal-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: 0.95em;
+  resize: vertical;
+}
+
+.saloon-modal-textarea:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+.saloon-modal-buttons {
+  display: flex;
+  gap: 0.5em;
+  justify-content: flex-end;
+  margin-top: 1.5em;
+  padding-top: 1em;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.saloon-save-button {
+  background: var(--interactive-success);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.saloon-save-button:hover {
+  opacity: 0.9;
+}
+
+.saloon-cancel-button {
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.saloon-cancel-button:hover {
+  background: var(--interactive-hover);
+}
+
+.saloon-warning {
+  color: var(--text-warning);
+  padding: 0.5em;
+  background: var(--background-primary-alt);
+  border-radius: 4px;
+  font-style: italic;
+}
+
+/* ===== Term Block Styles ===== */
+
+.saloon-term-minimal {
+  margin: 1em 0;
+  padding: 1.5em;
+  background: var(--background-primary);
+  border-radius: 8px;
+}
+
+.saloon-term-title {
+  margin: 0 0 1.5em 0;
+  padding-bottom: 0.75em;
+  font-size: 1.8em;
+  font-weight: 700;
+  color: var(--text-accent);
+  border-bottom: 2px solid var(--interactive-accent);
+}
+
+.saloon-section-minimal {
+  margin-bottom: 2em;
+  padding-bottom: 1.5em;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.saloon-section-minimal:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.saloon-section-header-minimal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1em;
+}
+
+.saloon-section-header-minimal h3 {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+/* Action icon buttons */
+.saloon-action-icons {
+  display: flex;
+  gap: 8px;
+}
+
+.saloon-icon-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s, transform 0.1s;
+  background: var(--background-modifier-border);
+}
+
+.saloon-icon-btn:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.saloon-icon-btn:disabled,
+.saloon-icon-disabled {
+  opacity: 0.3;
+  cursor: default;
+  transform: none;
+}
+
+.saloon-icon-cancel {
+  background: var(--background-modifier-error);
+  color: white;
+  font-weight: bold;
+}
+
+.saloon-icon-save {
+  background: var(--interactive-success);
+}
+
+.saloon-icon-sync {
+  background: var(--interactive-accent);
+}
+
+/* Content wrapper */
+.saloon-content-wrapper {
+  margin-left: 0.5em;
+}
+
+/* Preview */
+.saloon-preview-minimal {
+  color: var(--text-normal);
+  line-height: 1.6;
+  padding: 0.5em 0;
+  cursor: text;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.saloon-preview-minimal:hover {
+  background: var(--background-secondary);
+}
+
+.saloon-section-minimal.saloon-editing {
+  background: var(--background-secondary);
+  border-radius: 4px;
+  padding: 0.5em;
+  margin: -0.5em;
+  margin-bottom: 1.5em;
+}
+
+.saloon-preview-minimal p {
+  margin: 0.5em 0;
+}
+
+.saloon-preview-minimal p:first-child {
+  margin-top: 0;
+}
+
+.saloon-preview-minimal ul,
+.saloon-preview-minimal ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.saloon-preview-minimal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0;
+}
+
+.saloon-preview-minimal th,
+.saloon-preview-minimal td {
+  padding: 6px 10px;
+  border: 1px solid var(--background-modifier-border);
+  text-align: left;
+}
+
+.saloon-preview-minimal th {
+  background: var(--background-primary);
+  font-weight: 600;
+}
+
+/* Textarea */
+.saloon-textarea-minimal {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.saloon-textarea-minimal:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+/* Changelog */
+.saloon-changelog-minimal {
+  margin-left: 0.5em;
+  padding: 0.5em 0;
+}
+
+.saloon-changelog-entry {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  margin: 0.25em 0;
+}
+
+.saloon-changelog-empty {
+  color: var(--text-faint);
+  font-style: italic;
+  font-size: 0.9em;
+}

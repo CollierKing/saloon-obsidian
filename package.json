@@ -1,24 +1,40 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "saloon-obsidian",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Build AI-powered Wikis, Ontologies and Study Flashcards with SALOON.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
-	"author": "",
-	"license": "MIT",
+	"author": "Collier King",
+	"license": "ISC",
+	"dependencies": {
+		"@langchain/community": "^1.0.5",
+		"@langchain/core": "^1.1.0",
+		"@langchain/ollama": "^1.0.2",
+		"drizzle-orm": "^0.36.4",
+		"gray-matter": "^4.0.3",
+		"langchain": "^1.1.0",
+		"sql.js": "^1.8.0",
+		"zod": "^3.23.0"
+	},
 	"devDependencies": {
 		"@types/node": "^16.11.6",
+		"@types/sql.js": "^1.4.9",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
+		"drizzle-kit": "^0.28.1",
 		"esbuild": "0.17.3",
+		"eslint": "^9.39.1",
+		"eslint-plugin-obsidianmd": "^0.1.9",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"typescript": "5.3.3"
 	}
 }

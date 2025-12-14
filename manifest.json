@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "saloon",
+	"name": "Saloon",
 	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"minAppVersion": "1.4.0",
+	"description": "Build AI-powered Wikis, Ontologies and Study Flashcards with SALOON.",
+	"author": "Collier King",
+	"authorUrl": "https://github.com/CollierKing",
 	"isDesktopOnly": false
 }

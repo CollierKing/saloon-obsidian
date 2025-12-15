@@ -75,8 +75,10 @@ function createExtractionAgent(options?: ExtractionOptions) {
 
   const llm = new ChatOllama(config);
 
-  /* eslint-disable @typescript-eslint/no-explicit-any -- langchain types are not fully typed for this use case */
-  const agent = createAgent({
+  // Langchain's createAgent type definitions don't fully support custom Zod responseFormats.
+  // We use type assertions to work around the incomplete typing while maintaining type safety
+  // for the actual runtime values.
+  const agentConfig = {
     systemPrompt: `You are an expert at extracting technical terms from documents.
 
 Extract all technical terms, acronyms, and jargon from the text.
@@ -94,11 +96,13 @@ Focus on:
 
 Do not include common words or general vocabulary.`,
     model: llm,
-    responseFormat: toolStrategy(ExtractedTermsSchema as any, {
+    responseFormat: toolStrategy(ExtractedTermsSchema, {
       handleError: true,
-    }) as any,
-  } as any);
-  /* eslint-enable @typescript-eslint/no-explicit-any */
+    }),
+  };
+
+  // Cast through unknown to satisfy TypeScript - langchain types are incomplete for this use case
+  const agent = createAgent(agentConfig as unknown as Parameters<typeof createAgent>[0]);
 
   return agent;
 }

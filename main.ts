@@ -56,7 +56,13 @@ function renderAsMarkdownTable(results: Record<string, unknown>[]): string {
 	const rows = results.map(row => {
 		const values = keys.map(key => {
 			const value = row[key];
-			return value !== null && value !== undefined ? String(value) : '';
+			if (value === null || value === undefined) return '';
+			// Handle objects and arrays by JSON stringifying them
+			if (typeof value === 'object') return JSON.stringify(value);
+			// For primitives (string, number, boolean), convert to string
+			if (typeof value === 'string') return value;
+			if (typeof value === 'number' || typeof value === 'boolean') return value.toString();
+			return '';
 		});
 		return '| ' + values.join(' | ') + ' |';
 	});
@@ -252,11 +258,11 @@ export default class SaloonPlugin extends Plugin {
 			const commandCenterExists = await adapter.exists(COMMAND_CENTER_FILENAME);
 			if (!commandCenterExists) {
 				await this.app.vault.create(COMMAND_CENTER_FILENAME, COMMAND_CENTER_CONTENT);
-				new Notice('Saloon command center created in _saloon folder!');
+				new Notice('Saloon command center created in _saloon folder');
 			}
 		} catch (error) {
 			console.error('Failed to initialize Saloon plugin:', error);
-			new Notice('Failed to initialize Saloon plugin. Check the console for errors.');
+			new Notice('Failed to initialize Saloon plugin. Check console for errors.');
 			return;
 		}
 
@@ -356,54 +362,58 @@ export default class SaloonPlugin extends Plugin {
 						cls: 'saloon-reject-button'
 					});
 
-					approveBtn.addEventListener('click', async () => {
-						try {
-							const now = new Date().toISOString();
-							// Update status to approved
-							await db.update(approvalActions)
-								.set({ status: 'approved', updatedAt: now })
-								.where(eq(approvalActions.id, action.id));
+					approveBtn.addEventListener('click', () => {
+						void (async () => {
+							try {
+								const now = new Date().toISOString();
+								// Update status to approved
+								await db.update(approvalActions)
+									.set({ status: 'approved', updatedAt: now })
+									.where(eq(approvalActions.id, action.id));
 
-							// Create the actual term
-							const triples = generateKnowledgeTriples(termDetails.term || '', termDetails.definition || '');
-							// Build context array with text and source
-							const contextArray = termDetails.context ? [{
-								text: termDetails.context,
-								source: termDetails.source || ''
-							}] : [];
-							await db.insert(terms).values({
-								termId: action.targetTermId || crypto.randomUUID(),
-								term: termDetails.term || '',
-								definition: termDetails.definition || '',
-								context: JSON.stringify(contextArray),
-								knowledgeTriples: JSON.stringify(triples),
-								createdAt: now,
-								updatedAt: now
-							});
+								// Create the actual term
+								const triples = generateKnowledgeTriples(termDetails.term || '', termDetails.definition || '');
+								// Build context array with text and source
+								const contextArray = termDetails.context ? [{
+									text: termDetails.context,
+									source: termDetails.source || ''
+								}] : [];
+								await db.insert(terms).values({
+									termId: action.targetTermId || crypto.randomUUID(),
+									term: termDetails.term || '',
+									definition: termDetails.definition || '',
+									context: JSON.stringify(contextArray),
+									knowledgeTriples: JSON.stringify(triples),
+									createdAt: now,
+									updatedAt: now
+								});
 
-							await this.dbService.saveDatabase(this.databasePath, this.app.vault);
-							actionCard.remove();
-							new Notice(`Approved: ${termDetails.term}`);
-						} catch (error) {
-							console.error('Failed to approve:', error);
-							new Notice('Failed to approve term.');
-						}
+								await this.dbService.saveDatabase(this.databasePath, this.app.vault);
+								actionCard.remove();
+								new Notice(`Approved: ${termDetails.term}`);
+							} catch (error) {
+								console.error('Failed to approve:', error);
+								new Notice('Failed to approve term.');
+							}
+						})();
 					});
 
-					rejectBtn.addEventListener('click', async () => {
-						try {
-							const now = new Date().toISOString();
-							await db.update(approvalActions)
-								.set({ status: 'rejected', updatedAt: now })
-								.where(eq(approvalActions.id, action.id));
+					rejectBtn.addEventListener('click', () => {
+						void (async () => {
+							try {
+								const now = new Date().toISOString();
+								await db.update(approvalActions)
+									.set({ status: 'rejected', updatedAt: now })
+									.where(eq(approvalActions.id, action.id));
 
-							await this.dbService.saveDatabase(this.databasePath, this.app.vault);
-							actionCard.remove();
-							new Notice(`Rejected: ${termDetails.term}`);
-						} catch (error) {
-							console.error('Failed to reject:', error);
-							new Notice('Failed to reject term.');
-						}
+								await this.dbService.saveDatabase(this.databasePath, this.app.vault);
+								actionCard.remove();
+								new Notice(`Rejected: ${termDetails.term}`);
+							} catch (error) {
+								console.error('Failed to reject:', error);
+								new Notice('Failed to reject term.');
+							}
+						})();
 					});
 				}
 			} catch (error) {
@@ -492,7 +502,7 @@ export default class SaloonPlugin extends Plugin {
 					cls: 'saloon-input saloon-select'
 				});
 				const modelStatus = modelGroup.createEl('small', {
-					text: 'Enter Ollama url and click away to load models',
+					text: 'Enter Ollama URL and click away to load models',
 					cls: 'saloon-hint'
 				});
 
@@ -544,7 +554,7 @@ export default class SaloonPlugin extends Plugin {
 					} catch (error) {
 						console.error('Failed to fetch Ollama models:', error);
 						// Empty dropdown on connection failure
-						modelSelect.createEl('option', { text: '— No connection —', value: '' });
+						modelSelect.createEl('option', { text: 'No connection', value: '' });
 						modelSelect.disabled = true;
 						modelStatus.textContent = `Could not connect to ${baseUrl}`;
 						modelStatus.addClass('saloon-status-error');
@@ -568,7 +578,7 @@ export default class SaloonPlugin extends Plugin {
 				});
 				sourceInput.addEventListener('blur', () => void saveSetting('extract.sourcePath', sourceInput.value));
 				sourceGroup.createEl('small', {
-					text: 'Enter a vault-relative path (e.g., "Notes") or absolute path. Leave empty for current file only.',
+					text: 'Enter a vault-relative path (e.g., "notes") or absolute path. Leave empty for current file only',
 					cls: 'saloon-hint'
 				});
 
@@ -831,154 +841,158 @@ export default class SaloonPlugin extends Plugin {
 						});
 
 						// Bulk approve handler
-						bulkApproveBtn.addEventListener('click', async () => {
-							if (selectedIds.size === 0) {
-								new Notice('No items selected');
-								return;
-							}
+						bulkApproveBtn.addEventListener('click', () => {
+							void (async () => {
+								if (selectedIds.size === 0) {
+									new Notice('No items selected');
+									return;
+								}
 
-							const now = new Date().toISOString();
-							let successCount = 0;
-							let filesCreated = 0;
+								const now = new Date().toISOString();
+								let successCount = 0;
+								let filesCreated = 0;
 
-							// Ensure glossary folder exists
-							const glossaryFolder = this.settings.glossaryFolder || 'Saloon Glossary';
-							const folderExists = await this.app.vault.adapter.exists(glossaryFolder);
-							if (!folderExists) {
-								await this.app.vault.createFolder(glossaryFolder);
-							}
+								// Ensure glossary folder exists
+								const glossaryFolder = this.settings.glossaryFolder || 'Saloon Glossary';
+								const folderExists = await this.app.vault.adapter.exists(glossaryFolder);
+								if (!folderExists) {
+									await this.app.vault.createFolder(glossaryFolder);
+								}
 
-							for (const id of selectedIds) {
-								const itemData = itemElements.find(ie => ie.item.id === id);
-								if (!itemData) continue;
+								for (const id of selectedIds) {
+									const itemData = itemElements.find(ie => ie.item.id === id);
+									if (!itemData) continue;
 
-								try {
-									// Parse termDetails (may be double-stringified)
-									let termDetails = itemData.item.termDetails as { term?: string; definition?: string; context?: string; source?: string } | string | null;
-									if (typeof termDetails === 'string') {
-										try { termDetails = JSON.parse(termDetails); } catch { termDetails = null; }
-									}
-									const td = termDetails as { term?: string; definition?: string; context?: string; source?: string } | null;
-
-									if (itemData.item.actionType === 'create_term' && td?.term) {
-										const termId = crypto.randomUUID();
-										const triples = generateKnowledgeTriples(td.term, td.definition || '');
-										// Build context array with text and source
-										const contextArray = td.context ? [{
-											text: td.context,
-											source: td.source || ''
-										}] : [];
-
-										await db.insert(terms).values({
-											termId: termId,
-											term: td.term,
-											definition: td.definition || '',
-											context: JSON.stringify(contextArray),
-											knowledgeTriples: JSON.stringify(triples),
-											createdAt: now,
-											updatedAt: now
-										});
-
-										// Create term file
-										const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
-										const fileExists = await this.app.vault.adapter.exists(fileName);
-										if (!fileExists) {
-											const fileContent = generateTermFileContent({
-												termId: termId,
-												term: td.term,
-												definition: td.definition,
-												context: td.context,
-												sources: td.source ? [td.source] : [],
-												createdAt: now
-											});
-											await this.app.vault.create(fileName, fileContent);
-											filesCreated++;
+									try {
+										// Parse termDetails (may be double-stringified)
+										let termDetails = itemData.item.termDetails as { term?: string; definition?: string; context?: string; source?: string } | string | null;
+										if (typeof termDetails === 'string') {
+											try { termDetails = JSON.parse(termDetails); } catch { termDetails = null; }
 										}
-									} else if (itemData.item.actionType === 'update_term' && td?.term && itemData.item.targetTermId) {
-										// Get existing term to append context
-										const existingTerm = await db.select().from(terms).where(eq(terms.termId, itemData.item.targetTermId));
-										let existingContext: Array<{text: string, source: string}> = [];
-										if (existingTerm[0]?.context) {
-											try {
-												existingContext = typeof existingTerm[0].context === 'string'
-													? JSON.parse(existingTerm[0].context)
-													: existingTerm[0].context;
-											} catch { existingContext = []; }
-										}
-										// Append new context if provided
-										if (td.context) {
-											existingContext.push({
+										const td = termDetails as { term?: string; definition?: string; context?: string; source?: string } | null;
+
+										if (itemData.item.actionType === 'create_term' && td?.term) {
+											const termId = crypto.randomUUID();
+											const triples = generateKnowledgeTriples(td.term, td.definition || '');
+											// Build context array with text and source
+											const contextArray = td.context ? [{
 												text: td.context,
 												source: td.source || ''
-											});
-										}
-										// Update existing term
-										const updateTriples = generateKnowledgeTriples(td.term, td.definition || '');
-										await db.update(terms)
-											.set({
+											}] : [];
+
+											await db.insert(terms).values({
+												termId: termId,
+												term: td.term,
 												definition: td.definition || '',
-												context: JSON.stringify(existingContext),
-												knowledgeTriples: JSON.stringify(updateTriples),
+												context: JSON.stringify(contextArray),
+												knowledgeTriples: JSON.stringify(triples),
+												createdAt: now,
 												updatedAt: now
-											})
-											.where(eq(terms.termId, itemData.item.targetTermId));
-
-										// Update the term file changelog
-										const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
-										const file = this.app.vault.getAbstractFileByPath(fileName);
-										if (file instanceof TFile) {
-											const content = await this.app.vault.read(file);
-											const dateStr = new Date(now).toLocaleDateString('en-US', {
-												year: 'numeric',
-												month: 'short',
-												day: 'numeric'
 											});
-											const sourceLink = td.source ? `[[${td.source.split('/').pop()?.replace(/\.[^.]+$/, '')}]]` : '';
-											const newRow = `| ${dateStr} | Updated | ${td.context ? 'Context updated' : 'Updated'}${sourceLink ? ` from ${sourceLink}` : ''} |`;
-											const updatedContent = content.replace(/(\n```saloon-edit)/, `\n${newRow}$1`);
-											await this.app.vault.modify(file, updatedContent);
+
+											// Create term file
+											const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
+											const fileExists = await this.app.vault.adapter.exists(fileName);
+											if (!fileExists) {
+												const fileContent = generateTermFileContent({
+													termId: termId,
+													term: td.term,
+													definition: td.definition,
+													context: td.context,
+													sources: td.source ? [td.source] : [],
+													createdAt: now
+												});
+												await this.app.vault.create(fileName, fileContent);
+												filesCreated++;
+											}
+										} else if (itemData.item.actionType === 'update_term' && td?.term && itemData.item.targetTermId) {
+											// Get existing term to append context
+											const existingTerm = await db.select().from(terms).where(eq(terms.termId, itemData.item.targetTermId));
+											let existingContext: Array<{text: string, source: string}> = [];
+											if (existingTerm[0]?.context) {
+												try {
+													existingContext = typeof existingTerm[0].context === 'string'
+														? JSON.parse(existingTerm[0].context)
+														: existingTerm[0].context;
+												} catch { existingContext = []; }
+											}
+											// Append new context if provided
+											if (td.context) {
+												existingContext.push({
+													text: td.context,
+													source: td.source || ''
+												});
+											}
+											// Update existing term
+											const updateTriples = generateKnowledgeTriples(td.term, td.definition || '');
+											await db.update(terms)
+												.set({
+													definition: td.definition || '',
+													context: JSON.stringify(existingContext),
+													knowledgeTriples: JSON.stringify(updateTriples),
+													updatedAt: now
+												})
+												.where(eq(terms.termId, itemData.item.targetTermId));
+
+											// Update the term file changelog
+											const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
+											const file = this.app.vault.getAbstractFileByPath(fileName);
+											if (file instanceof TFile) {
+												const content = await this.app.vault.read(file);
+												const dateStr = new Date(now).toLocaleDateString('en-US', {
+													year: 'numeric',
+													month: 'short',
+													day: 'numeric'
+												});
+												const sourceLink = td.source ? `[[${td.source.split('/').pop()?.replace(/\.[^.]+$/, '')}]]` : '';
+												const newRow = `| ${dateStr} | Updated | ${td.context ? 'Context updated' : 'Updated'}${sourceLink ? ` from ${sourceLink}` : ''} |`;
+												const updatedContent = content.replace(/(\n```saloon-edit)/, `\n${newRow}$1`);
+												await this.app.vault.modify(file, updatedContent);
+											}
 										}
+
+										await db.update(approvalActions)
+											.set({ status: 'approved', updatedAt: now })
+											.where(eq(approvalActions.id, id));
+
+										successCount++;
+									} catch (error) {
+										console.error(`Failed to approve ${id}:`, error);
 									}
-
-									await db.update(approvalActions)
-										.set({ status: 'approved', updatedAt: now })
-										.where(eq(approvalActions.id, id));
-
-									successCount++;
-								} catch (error) {
-									console.error(`Failed to approve ${id}:`, error);
 								}
-							}
 
-							await this.dbService.saveDatabase(this.databasePath, this.app.vault);
-							new Notice(`Approved ${successCount} items${filesCreated > 0 ? `, created ${filesCreated} term files` : ''}`);
-							await loadPendingItems();
+								await this.dbService.saveDatabase(this.databasePath, this.app.vault);
+								new Notice(`Approved ${successCount} items${filesCreated > 0 ? `, created ${filesCreated} term files` : ''}`);
+								await loadPendingItems();
+							})();
 						});
 
 						// Bulk reject handler
-						bulkRejectBtn.addEventListener('click', async () => {
-							if (selectedIds.size === 0) {
-								new Notice('No items selected');
-								return;
-							}
-
-							const now = new Date().toISOString();
-							let successCount = 0;
-
-							for (const id of selectedIds) {
-								try {
-									await db.update(approvalActions)
-										.set({ status: 'rejected', updatedAt: now })
-										.where(eq(approvalActions.id, id));
-									successCount++;
-								} catch (error) {
-									console.error(`Failed to reject ${id}:`, error);
+						bulkRejectBtn.addEventListener('click', () => {
+							void (async () => {
+								if (selectedIds.size === 0) {
+									new Notice('No items selected');
+									return;
 								}
-							}
 
-							await this.dbService.saveDatabase(this.databasePath, this.app.vault);
-							new Notice(`Rejected ${successCount} items`);
-							await loadPendingItems();
+								const now = new Date().toISOString();
+								let successCount = 0;
+
+								for (const id of selectedIds) {
+									try {
+										await db.update(approvalActions)
+											.set({ status: 'rejected', updatedAt: now })
+											.where(eq(approvalActions.id, id));
+										successCount++;
+									} catch (error) {
+										console.error(`Failed to reject ${id}:`, error);
+									}
+								}
+
+								await this.dbService.saveDatabase(this.databasePath, this.app.vault);
+								new Notice(`Rejected ${successCount} items`);
+								await loadPendingItems();
+							})();
 						});
 
 						// Items list
@@ -1078,141 +1092,145 @@ export default class SaloonPlugin extends Plugin {
 								}
 							}
 
-							approveBtn.addEventListener('click', async () => {
-								try {
-									const now = new Date().toISOString();
-									const termId = crypto.randomUUID();
+							approveBtn.addEventListener('click', () => {
+								void (async () => {
+									try {
+										const now = new Date().toISOString();
+										const termId = crypto.randomUUID();
 
-									if (item.actionType === 'create_term' && td?.term) {
-										// Insert term into database
-										const triples = generateKnowledgeTriples(td.term, td.definition || '');
-										// Build context array with text and source
-										const contextArray = td.context ? [{
-											text: td.context,
-											source: td.source || ''
-										}] : [];
-										await db.insert(terms).values({
-											termId: termId,
-											term: td.term,
-											definition: td.definition || '',
-											context: JSON.stringify(contextArray),
-											knowledgeTriples: JSON.stringify(triples),
-											createdAt: now,
-											updatedAt: now
-										});
-
-										// Create term file in glossary folder
-										const glossaryFolder = this.settings.glossaryFolder || 'Saloon Glossary';
-										const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
-
-										// Ensure glossary folder exists
-										const folderExists = await this.app.vault.adapter.exists(glossaryFolder);
-										if (!folderExists) {
-											await this.app.vault.createFolder(glossaryFolder);
-										}
-
-										// Check if file already exists
-										const fileExists = await this.app.vault.adapter.exists(fileName);
-										if (!fileExists) {
-											const fileContent = generateTermFileContent({
-												termId: termId,
-												term: td.term,
-												definition: td.definition,
-												context: td.context,
-												sources: td.source ? [td.source] : [],
-												createdAt: now
-											});
-											await this.app.vault.create(fileName, fileContent);
-											new Notice(`Created term file: ${td.term}`);
-										} else {
-											new Notice(`Term file already exists: ${td.term}`);
-										}
-									} else if (item.actionType === 'update_term' && td?.term && item.targetTermId) {
-										// Get existing term to append context
-										const existingTerm = await db.select().from(terms).where(eq(terms.termId, item.targetTermId));
-										let existingContext: Array<{text: string, source: string}> = [];
-										if (existingTerm[0]?.context) {
-											try {
-												existingContext = typeof existingTerm[0].context === 'string'
-													? JSON.parse(existingTerm[0].context)
-													: existingTerm[0].context;
-											} catch { existingContext = []; }
-										}
-										// Append new context if provided
-										if (td.context) {
-											existingContext.push({
+										if (item.actionType === 'create_term' && td?.term) {
+											// Insert term into database
+											const triples = generateKnowledgeTriples(td.term, td.definition || '');
+											// Build context array with text and source
+											const contextArray = td.context ? [{
 												text: td.context,
 												source: td.source || ''
-											});
-										}
-										// Update existing term in database
-										const updateTriples = generateKnowledgeTriples(td.term, td.definition || '');
-										await db.update(terms)
-											.set({
+											}] : [];
+											await db.insert(terms).values({
+												termId: termId,
+												term: td.term,
 												definition: td.definition || '',
-												context: JSON.stringify(existingContext),
-												knowledgeTriples: JSON.stringify(updateTriples),
+												context: JSON.stringify(contextArray),
+												knowledgeTriples: JSON.stringify(triples),
+												createdAt: now,
 												updatedAt: now
-											})
-											.where(eq(terms.termId, item.targetTermId));
+											});
 
-										// Update the term file
-										const glossaryFolder = this.settings.glossaryFolder || 'Saloon Glossary';
-										const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
-										const fileExists = await this.app.vault.adapter.exists(fileName);
+											// Create term file in glossary folder
+											const glossaryFolder = this.settings.glossaryFolder || 'Saloon Glossary';
+											const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
 
-										if (fileExists) {
-											// Read existing file and append to changelog
-											const file = this.app.vault.getAbstractFileByPath(fileName);
-											if (file instanceof TFile) {
-												const content = await this.app.vault.read(file);
-												const dateStr = new Date(now).toLocaleDateString('en-US', {
-													year: 'numeric',
-													month: 'short',
-													day: 'numeric'
+											// Ensure glossary folder exists
+											const folderExists = await this.app.vault.adapter.exists(glossaryFolder);
+											if (!folderExists) {
+												await this.app.vault.createFolder(glossaryFolder);
+											}
+
+											// Check if file already exists
+											const fileExists = await this.app.vault.adapter.exists(fileName);
+											if (!fileExists) {
+												const fileContent = generateTermFileContent({
+													termId: termId,
+													term: td.term,
+													definition: td.definition,
+													context: td.context,
+													sources: td.source ? [td.source] : [],
+													createdAt: now
 												});
-												const sourceLink = td.source ? `[[${td.source.split('/').pop()?.replace(/\.[^.]+$/, '')}]]` : '';
-												const newRow = `| ${dateStr} | Updated | ${td.context ? 'Context updated' : 'Updated'}${sourceLink ? ` from ${sourceLink}` : ''} |`;
+												await this.app.vault.create(fileName, fileContent);
+												new Notice(`Created term file: ${td.term}`);
+											} else {
+												new Notice(`Term file already exists: ${td.term}`);
+											}
+										} else if (item.actionType === 'update_term' && td?.term && item.targetTermId) {
+											// Get existing term to append context
+											const existingTerm = await db.select().from(terms).where(eq(terms.termId, item.targetTermId));
+											let existingContext: Array<{text: string, source: string}> = [];
+											if (existingTerm[0]?.context) {
+												try {
+													existingContext = typeof existingTerm[0].context === 'string'
+														? JSON.parse(existingTerm[0].context)
+														: existingTerm[0].context;
+												} catch { existingContext = []; }
+											}
+											// Append new context if provided
+											if (td.context) {
+												existingContext.push({
+													text: td.context,
+													source: td.source || ''
+												});
+											}
+											// Update existing term in database
+											const updateTriples = generateKnowledgeTriples(td.term, td.definition || '');
+											await db.update(terms)
+												.set({
+													definition: td.definition || '',
+													context: JSON.stringify(existingContext),
+													knowledgeTriples: JSON.stringify(updateTriples),
+													updatedAt: now
+												})
+												.where(eq(terms.termId, item.targetTermId));
 
-												// Insert before the saloon-edit block
-												const updatedContent = content.replace(
-													/(\n```saloon-edit)/,
-													`\n${newRow}$1`
-												);
-												await this.app.vault.modify(file, updatedContent);
-												new Notice(`Updated term file: ${td.term}`);
+											// Update the term file
+											const glossaryFolder = this.settings.glossaryFolder || 'Saloon Glossary';
+											const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
+											const fileExists = await this.app.vault.adapter.exists(fileName);
+
+											if (fileExists) {
+												// Read existing file and append to changelog
+												const file = this.app.vault.getAbstractFileByPath(fileName);
+												if (file instanceof TFile) {
+													const content = await this.app.vault.read(file);
+													const dateStr = new Date(now).toLocaleDateString('en-US', {
+														year: 'numeric',
+														month: 'short',
+														day: 'numeric'
+													});
+													const sourceLink = td.source ? `[[${td.source.split('/').pop()?.replace(/\.[^.]+$/, '')}]]` : '';
+													const newRow = `| ${dateStr} | Updated | ${td.context ? 'Context updated' : 'Updated'}${sourceLink ? ` from ${sourceLink}` : ''} |`;
+
+													// Insert before the saloon-edit block
+													const updatedContent = content.replace(
+														/(\n```saloon-edit)/,
+														`\n${newRow}$1`
+													);
+													await this.app.vault.modify(file, updatedContent);
+													new Notice(`Updated term file: ${td.term}`);
+												}
 											}
 										}
+
+										await db.update(approvalActions)
+											.set({ status: 'approved', updatedAt: now })
+											.where(eq(approvalActions.id, item.id));
+
+										await this.dbService.saveDatabase(this.databasePath, this.app.vault);
+										new Notice(`Approved: ${termName}`);
+										await loadPendingItems();
+									} catch (error) {
+										console.error('Failed to approve:', error);
+										new Notice('Failed to approve item.');
 									}
-
-									await db.update(approvalActions)
-										.set({ status: 'approved', updatedAt: now })
-										.where(eq(approvalActions.id, item.id));
-
-									await this.dbService.saveDatabase(this.databasePath, this.app.vault);
-									new Notice(`Approved: ${termName}`);
-									await loadPendingItems();
-								} catch (error) {
-									console.error('Failed to approve:', error);
-									new Notice('Failed to approve item.');
-								}
+								})();
 							});
 
-							rejectBtn.addEventListener('click', async () => {
-								try {
-									const now = new Date().toISOString();
+							rejectBtn.addEventListener('click', () => {
+								void (async () => {
+									try {
+										const now = new Date().toISOString();
 
-									await db.update(approvalActions)
-										.set({ status: 'rejected', updatedAt: now })
-										.where(eq(approvalActions.id, item.id));
+										await db.update(approvalActions)
+											.set({ status: 'rejected', updatedAt: now })
+											.where(eq(approvalActions.id, item.id));
 
-									await this.dbService.saveDatabase(this.databasePath, this.app.vault);
-									new Notice(`Rejected: ${termName}`);
-									await loadPendingItems();
-								} catch (error) {
-									console.error('Failed to reject:', error);
-									new Notice('Failed to reject item.');
-								}
+										await this.dbService.saveDatabase(this.databasePath, this.app.vault);
+										new Notice(`Rejected: ${termName}`);
+										await loadPendingItems();
+									} catch (error) {
+										console.error('Failed to reject:', error);
+										new Notice('Failed to reject item.');
+									}
+								})();
 							});
 						}
 					} catch (error) {
@@ -1225,13 +1243,14 @@ export default class SaloonPlugin extends Plugin {
 				await loadPendingItems();
 
 				// Extract button handler
-				button.addEventListener('click', async () => {
-					button.disabled = true;
-					button.textContent = 'Extracting...';
-					resultsContainer.empty();
-					progressContainer.removeClass('saloon-hidden');
-					progressFill.setCssStyles({ width: '0%' });
-					progressText.textContent = 'Starting...';
+				button.addEventListener('click', () => {
+					void (async () => {
+						button.disabled = true;
+						button.textContent = 'Extracting...';
+						resultsContainer.empty();
+						progressContainer.removeClass('saloon-hidden');
+						progressFill.setCssStyles({ width: '0%' });
+						progressText.textContent = 'Starting...';
 
 					try {
 						const extractOllamaUrl = ollamaUrl || 'http://localhost:11434';
@@ -1412,10 +1431,11 @@ export default class SaloonPlugin extends Plugin {
 						});
 						new Notice('Extraction failed. Check console.');
 					} finally {
-						button.disabled = false;
-						button.textContent = 'Extract terms';
-						progressContainer.addClass('saloon-hidden');
-					}
+							button.disabled = false;
+							button.textContent = 'Extract terms';
+							progressContainer.addClass('saloon-hidden');
+						}
+					})();
 				});
 			} catch (error) {
 				console.error('saloon-extract initialization error:', error);
@@ -1519,77 +1539,79 @@ export default class SaloonPlugin extends Plugin {
 						cls: 'saloon-cancel-button'
 					});
 
-					saveBtn.addEventListener('click', async () => {
-						try {
-							const now = new Date().toISOString();
-							const newDef = defInput.value.trim();
-							const newCtx = ctxInput.value.trim();
+					saveBtn.addEventListener('click', () => {
+						void (async () => {
+							try {
+								const now = new Date().toISOString();
+								const newDef = defInput.value.trim();
+								const newCtx = ctxInput.value.trim();
 
-							// Update database
-							if (term) {
-								const updateTriples = generateKnowledgeTriples(term.term, newDef);
-								// For edit modal, replace context with single entry (no source available)
-								const contextArray = newCtx ? [{ text: newCtx, source: '' }] : [];
-								await db.update(terms)
-									.set({
-										definition: newDef,
-										context: JSON.stringify(contextArray),
-										knowledgeTriples: JSON.stringify(updateTriples),
-										updatedAt: now
-									})
-									.where(eq(terms.termId, termId));
+								// Update database
+								if (term) {
+									const updateTriples = generateKnowledgeTriples(term.term, newDef);
+									// For edit modal, replace context with single entry (no source available)
+									const contextArray = newCtx ? [{ text: newCtx, source: '' }] : [];
+									await db.update(terms)
+										.set({
+											definition: newDef,
+											context: JSON.stringify(contextArray),
+											knowledgeTriples: JSON.stringify(updateTriples),
+											updatedAt: now
+										})
+										.where(eq(terms.termId, termId));
 
-								await this.dbService.saveDatabase(this.databasePath, this.app.vault);
-							}
+									await this.dbService.saveDatabase(this.databasePath, this.app.vault);
+								}
 
-							// Update file content
-							let updatedContent = content;
+								// Update file content
+								let updatedContent = content;
 
-							// Update definition section
-							if (defMatch) {
+								// Update definition section
+								if (defMatch) {
+									updatedContent = updatedContent.replace(
+										/## Definition\n[\s\S]*?(?=\n##|$)/,
+										`## Definition\n${newDef}\n`
+									);
+								}
+
+								// Update context section
+								if (ctxMatch) {
+									updatedContent = updatedContent.replace(
+										/## Context\n[\s\S]*?(?=\n(?:Source:|##)|$)/,
+										`## Context\n${newCtx}\n\n`
+									);
+								}
+
+								// Update frontmatter updatedAt
 								updatedContent = updatedContent.replace(
-									/## Definition\n[\s\S]*?(?=\n##|$)/,
-									`## Definition\n${newDef}\n`
+									/updatedAt: .*/,
+									`updatedAt: ${now}`
 								);
-							}
 
-							// Update context section
-							if (ctxMatch) {
+								// Add changelog entry
+								const dateStr = new Date(now).toLocaleDateString('en-US', {
+									year: 'numeric',
+									month: 'short',
+									day: 'numeric'
+								});
+								const newRow = `| ${dateStr} | Edited | Manual edit |`;
 								updatedContent = updatedContent.replace(
-									/## Context\n[\s\S]*?(?=\n(?:Source:|##)|$)/,
-									`## Context\n${newCtx}\n\n`
+									/(\n```saloon-edit)/,
+									`\n${newRow}$1`
 								);
+
+								await this.app.vault.modify(file, updatedContent);
+
+								overlay.remove();
+								new Notice(`Updated: ${termName}`);
+
+								// Trigger re-render
+								this.app.workspace.trigger('layout-change');
+							} catch (error) {
+								console.error('Failed to save term:', error);
+								new Notice('Failed to save term.');
 							}
-
-							// Update frontmatter updatedAt
-							updatedContent = updatedContent.replace(
-								/updatedAt: .*/,
-								`updatedAt: ${now}`
-							);
-
-							// Add changelog entry
-							const dateStr = new Date(now).toLocaleDateString('en-US', {
-								year: 'numeric',
-								month: 'short',
-								day: 'numeric'
-							});
-							const newRow = `| ${dateStr} | Edited | Manual edit |`;
-							updatedContent = updatedContent.replace(
-								/(\n```saloon-edit)/,
-								`\n${newRow}$1`
-							);
-
-							await this.app.vault.modify(file, updatedContent);
-
-							overlay.remove();
-							new Notice(`Updated: ${termName}`);
-
-							// Trigger re-render
-							this.app.workspace.trigger('layout-change');
-						} catch (error) {
-							console.error('Failed to save term:', error);
-							new Notice('Failed to save term.');
-						}
+						})();
 					});
 
 					cancelBtn.addEventListener('click', () => {
@@ -1812,11 +1834,13 @@ export default class SaloonPlugin extends Plugin {
 					}
 				};
 
-				saveBtn.addEventListener('click', async () => {
-					await onSaveToDb(currentEditorValue);
-					hasUserEdited = false;
-					updateSaveButtonState();
-					exitEditMode(true);
+				saveBtn.addEventListener('click', () => {
+					void (async () => {
+						await onSaveToDb(currentEditorValue);
+						hasUserEdited = false;
+						updateSaveButtonState();
+						exitEditMode(true);
+					})();
 				});
 
 				cancelBtn.addEventListener('click', () => {
@@ -2081,7 +2105,7 @@ class SaloonSettingTab extends PluginSettingTab {
 			.setName('Glossary folder')
 			.setDesc('Folder where term files will be created when approved. Relative to vault root.')
 			.addText(text => text
-				.setPlaceholder('Saloon Glossary')
+				.setPlaceholder('saloon-glossary')
 				.setValue(this.plugin.settings.glossaryFolder)
 				.onChange(async (value) => {
 					this.plugin.settings.glossaryFolder = value;
@@ -2090,8 +2114,8 @@ class SaloonSettingTab extends PluginSettingTab {
 
 		// Ollama URL setting
 		new Setting(containerEl)
-			.setName('Ollama API url')
-			.setDesc('Base url for the Ollama API server used for term extraction')
+			.setName('Ollama API URL')
+			.setDesc('Base URL for the Ollama API server used for term extraction')
 			.addText(text => text
 				.setPlaceholder('http://localhost:11434')
 				.setValue(this.plugin.settings.ollamaUrl)

@@ -45,12 +45,26 @@ export default tseslint.config(
 			"obsidianmd/sample-names": "error",
 			"obsidianmd/validate-manifest": "error",
 			"obsidianmd/validate-license": "error",
-			"obsidianmd/ui/sentence-case": "warn",
+			"obsidianmd/ui/sentence-case": ["error", {
+				// Add custom brand names that should preserve their casing
+				brands: ["Saloon", "Ollama"],
+				// Ignore URL placeholders and folder paths with underscores
+				ignoreRegex: ["^https?://", "^[a-z-]+$", "_saloon"]
+			}],
 
-			// TypeScript rules
+			// TypeScript rules - match review bot requirements
 			"@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-			"@typescript-eslint/no-explicit-any": "warn",
+			"@typescript-eslint/no-explicit-any": "error",
+			"@typescript-eslint/no-floating-promises": "error",
+			"@typescript-eslint/require-await": "error",
 			"@typescript-eslint/ban-ts-comment": "off",
+			"@typescript-eslint/no-base-to-string": "error",
+			"@typescript-eslint/no-misused-promises": ["error", {
+				checksVoidReturn: {
+					arguments: true,
+					attributes: false,
+				},
+			}],
 			"no-prototype-builtins": "off",
 		},
 	}

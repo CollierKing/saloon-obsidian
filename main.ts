@@ -1,5 +1,5 @@
 /* MARK: - Imports */
-import { App, MarkdownRenderer, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { App, Component, MarkdownRenderer, Notice, Plugin, PluginSettingTab, requestUrl, Setting, TFile } from 'obsidian';
 import { DrizzleDatabase, approvalActions, terms, settings } from './db';
 import { eq } from 'drizzle-orm';
 import { extractTermsFromMarkdown, Term, deduplicateTerms, chunkText, ProgressInfo } from './corpus';
@@ -41,7 +41,7 @@ Extract terms, then approve or reject each one individually.
 
 /* MARK: - Utility Functions */
 
-function renderAsMarkdownTable(results: any[]): string {
+function renderAsMarkdownTable(results: Record<string, unknown>[]): string {
 	if (results.length === 0) {
 		return 'No results found.';
 	}
@@ -151,7 +151,7 @@ function generateTermFileContent(data: TermFileData): string {
 	const triples = generateKnowledgeTriples(data.term, data.definition || '');
 
 	// Generate source links as Obsidian wiki-links (used for future template expansion)
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- prepared for future template expansion
 	const _sourceLinks = data.sources
 		.map(src => {
 			// Extract filename without extension for wiki-link
@@ -171,7 +171,7 @@ function generateTermFileContent(data: TermFileData): string {
 	].join('\n');
 
 	// Build knowledge triples table (used for future template expansion)
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- prepared for future template expansion
 	const _triplesTable = triples.length > 0
 		? [
 			'| Subject | Predicate | Target |',
@@ -236,7 +236,6 @@ export default class SaloonPlugin extends Plugin {
 			// Database stored in _saloon folder (synced with vault)
 			this.databasePath = `${SALOON_FOLDER}/${DATABASE_FILENAME}`;
 
-			console.log('Attempting to load WASM from:', this.wasmPath);
 			const wasmBinary = await adapter.readBinary(this.wasmPath);
 
 			// Initialize Drizzle database
@@ -249,18 +248,15 @@ export default class SaloonPlugin extends Plugin {
 				this.lastDbModTime = stat.mtime;
 			}
 
-			console.log('Database initialized successfully with approval_actions and terms tables');
-
 			// Create Command Center file if it doesn't exist
 			const commandCenterExists = await adapter.exists(COMMAND_CENTER_FILENAME);
 			if (!commandCenterExists) {
 				await this.app.vault.create(COMMAND_CENTER_FILENAME, COMMAND_CENTER_CONTENT);
-				console.log('Created Saloon Command Center file');
-				new Notice('Saloon Command Center created in _saloon folder!');
+				new Notice('Saloon command center created in _saloon folder!');
 			}
 		} catch (error) {
 			console.error('Failed to initialize Saloon plugin:', error);
-			new Notice('Failed to initialize Saloon plugin. Check console for errors.');
+			new Notice('Failed to initialize Saloon plugin. Check the console for errors.');
 			return;
 		}
 
@@ -273,7 +269,7 @@ export default class SaloonPlugin extends Plugin {
 				await this.checkAndReloadDatabase();
 
 				if (!this.dbService || !this.dbService.db) {
-					el.createEl('div', { text: 'Error: Database not loaded' });
+					el.createEl('div', { text: 'Error: database not loaded' });
 					return;
 				}
 
@@ -287,7 +283,7 @@ export default class SaloonPlugin extends Plugin {
 
 				// Create container
 				const container = el.createDiv({ cls: 'saloon-actions-container' });
-				container.createEl('h3', { text: 'Pending Approvals', cls: 'saloon-actions-title' });
+				container.createEl('h3', { text: 'Pending approvals', cls: 'saloon-actions-title' });
 
 				if (pendingActions.length === 0) {
 					container.createEl('p', { text: 'No pending actions.', cls: 'saloon-empty-message' });
@@ -321,7 +317,7 @@ export default class SaloonPlugin extends Plugin {
 					const termHeader = actionCard.createDiv({ cls: 'saloon-action-header' });
 					termHeader.createEl('strong', { text: termDetails.term || 'Unknown Term' });
 					termHeader.createEl('span', {
-						text: action.actionType === 'create_term' ? 'New Term' : action.actionType,
+						text: action.actionType === 'create_term' ? 'New term' : action.actionType,
 						cls: 'saloon-action-badge'
 					});
 
@@ -423,7 +419,7 @@ export default class SaloonPlugin extends Plugin {
 				await this.checkAndReloadDatabase();
 
 				if (!this.dbService || !this.dbService.db) {
-					el.createEl('div', { text: 'Error: Database not loaded' });
+					el.createEl('div', { text: 'Error: database not loaded' });
 					return;
 				}
 
@@ -434,10 +430,10 @@ export default class SaloonPlugin extends Plugin {
 					.select()
 					.from(terms);
 
-				console.log('saloon-terms: Found', allTerms.length, 'terms');
-
 				const markdownTable = renderAsMarkdownTable(allTerms);
-				await MarkdownRenderer.renderMarkdown(markdownTable, el, ctx.sourcePath, this);
+				const renderComponent = new Component();
+				renderComponent.load();
+				await MarkdownRenderer.render(this.app, markdownTable, el, ctx.sourcePath, renderComponent);
 			} catch (error) {
 				console.error('saloon-terms error:', error);
 				el.createEl('div', { text: `Error: ${error.message}` });
@@ -450,7 +446,7 @@ export default class SaloonPlugin extends Plugin {
 				// Check database is ready
 				await this.checkAndReloadDatabase();
 				if (!this.dbService || !this.dbService.db) {
-					el.createEl('div', { text: 'Error: Database not loaded' });
+					el.createEl('div', { text: 'Error: database not loaded' });
 					return;
 				}
 
@@ -481,7 +477,7 @@ export default class SaloonPlugin extends Plugin {
 				const container = el.createDiv({ cls: 'saloon-extract-container' });
 
 				// Title
-				container.createEl('h3', { text: 'Saloon Term Extraction', cls: 'saloon-extract-title' });
+				container.createEl('h3', { text: 'Saloon term extraction', cls: 'saloon-extract-title' });
 
 				// Config section
 				const configSection = container.createDiv({ cls: 'saloon-config-section' });
@@ -496,7 +492,7 @@ export default class SaloonPlugin extends Plugin {
 					cls: 'saloon-input saloon-select'
 				});
 				const modelStatus = modelGroup.createEl('small', {
-					text: 'Enter Ollama URL and click away to load models',
+					text: 'Enter Ollama url and click away to load models',
 					cls: 'saloon-hint'
 				});
 
@@ -508,12 +504,12 @@ export default class SaloonPlugin extends Plugin {
 					modelSelect.disabled = false;
 
 					try {
-						const response = await fetch(`${baseUrl}/api/tags`);
-						if (!response.ok) {
-							throw new Error(`HTTP ${response.status}`);
-						}
+						const response = await requestUrl({
+							url: `${baseUrl}/api/tags`,
+							method: 'GET',
+						});
 
-						const data = await response.json();
+						const data = response.json;
 						const models: { name: string }[] = data.models || [];
 
 						if (models.length === 0) {
@@ -556,29 +552,29 @@ export default class SaloonPlugin extends Plugin {
 				};
 
 				// Save model selection on change
-				modelSelect.addEventListener('change', () => saveSetting('extract.model', modelSelect.value));
+				modelSelect.addEventListener('change', () => void saveSetting('extract.model', modelSelect.value));
 
 				// Initial model fetch using plugin settings URL
 				await fetchOllamaModels(ollamaUrl);
 
 				// Source directory input
 				const sourceGroup = configSection.createDiv({ cls: 'saloon-input-group' });
-				sourceGroup.createEl('label', { text: 'Source Directory (optional):', cls: 'saloon-label' });
+				sourceGroup.createEl('label', { text: 'Source directory (optional):', cls: 'saloon-label' });
 				const sourceInput = sourceGroup.createEl('input', {
 					type: 'text',
 					placeholder: 'Leave empty to extract from current file',
 					cls: 'saloon-input',
 					value: savedSourcePath
 				});
-				sourceInput.addEventListener('blur', () => saveSetting('extract.sourcePath', sourceInput.value));
+				sourceInput.addEventListener('blur', () => void saveSetting('extract.sourcePath', sourceInput.value));
 				sourceGroup.createEl('small', {
-					text: 'Enter a vault-relative path (e.g., "Saloon Project") or absolute path. Leave empty for current file only.',
+					text: 'Enter a vault-relative path (e.g., "Notes") or absolute path. Leave empty for current file only.',
 					cls: 'saloon-hint'
 				});
 
 				// Chunk size slider
 				const chunkGroup = configSection.createDiv({ cls: 'saloon-input-group' });
-				chunkGroup.createEl('label', { text: 'Chunk Size (characters):', cls: 'saloon-label' });
+				chunkGroup.createEl('label', { text: 'Chunk size (characters):', cls: 'saloon-label' });
 				const chunkRow = chunkGroup.createDiv({ cls: 'saloon-slider-row' });
 				const chunkSlider = chunkRow.createEl('input', {
 					type: 'range',
@@ -598,7 +594,7 @@ export default class SaloonPlugin extends Plugin {
 					chunkValue.textContent = chunkSlider.value;
 				});
 				chunkSlider.addEventListener('change', () => {
-					saveSetting('extract.chunkSize', chunkSlider.value);
+					void saveSetting('extract.chunkSize', chunkSlider.value);
 				});
 
 				chunkGroup.createEl('small', {
@@ -609,7 +605,7 @@ export default class SaloonPlugin extends Plugin {
 				// Button section
 				const buttonSection = container.createDiv({ cls: 'saloon-button-section' });
 				const button = buttonSection.createEl('button', {
-					text: 'Extract Terms',
+					text: 'Extract terms',
 					cls: 'saloon-extract-button'
 				});
 
@@ -649,7 +645,7 @@ export default class SaloonPlugin extends Plugin {
 						// Header with count
 						const header = pendingContainer.createDiv({ cls: 'saloon-pending-header' });
 						const headerTitle = header.createEl('h4');
-						headerTitle.createSpan({ text: 'Pending Approvals ' });
+						headerTitle.createSpan({ text: 'Pending approvals ' });
 						headerTitle.createEl('span', {
 							text: `(${pendingItems.length})`,
 							cls: 'saloon-pending-count'
@@ -689,7 +685,7 @@ export default class SaloonPlugin extends Plugin {
 						const actionFilterGroup = toolbar.createDiv({ cls: 'saloon-action-group' });
 						actionFilterGroup.createEl('label', { text: 'Type:', cls: 'saloon-filter-label' });
 						const actionFilter = actionFilterGroup.createEl('select', { cls: 'saloon-action-select' });
-						actionFilter.createEl('option', { value: '', text: 'All Types' });
+						actionFilter.createEl('option', { value: '', text: 'All types' });
 						const actionTypes = ['create_term', 'add_tag', 'add_context', 'trigger_context_search', 'combine_with'];
 						actionTypes.forEach(type => {
 							actionFilter.createEl('option', { value: type, text: type.replace(/_/g, ' ') });
@@ -728,9 +724,9 @@ export default class SaloonPlugin extends Plugin {
 						// Collect unique sources from pending items
 						const uniqueSources = new Set<string>();
 						pendingItems.forEach(item => {
-							let td = item.termDetails as any;
+							let td = item.termDetails as { source?: string } | string | null;
 							if (typeof td === 'string') {
-								try { td = JSON.parse(td); } catch { td = null; }
+								try { td = JSON.parse(td) as { source?: string }; } catch { td = null; }
 							}
 							if (td?.source) uniqueSources.add(td.source);
 						});
@@ -749,7 +745,7 @@ export default class SaloonPlugin extends Plugin {
 						// Selection controls
 						const selectionGroup = toolbar.createDiv({ cls: 'saloon-selection-group' });
 						const selectAllBtn = selectionGroup.createEl('button', {
-							text: 'Select All',
+							text: 'Select all',
 							cls: 'saloon-select-all-button'
 						});
 						const selectionCount = selectionGroup.createEl('span', {
@@ -830,7 +826,7 @@ export default class SaloonPlugin extends Plugin {
 									}
 								}
 							});
-							selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+							selectAllBtn.textContent = allSelected ? 'Deselect all' : 'Select all';
 							updateSelectionCount();
 						});
 
@@ -1021,7 +1017,7 @@ export default class SaloonPlugin extends Plugin {
 								} else {
 									selectedIds.delete(item.id);
 									allSelected = false;
-									selectAllBtn.textContent = 'Select All';
+									selectAllBtn.textContent = 'Select all';
 								}
 								updateSelectionCount();
 							});
@@ -1030,12 +1026,12 @@ export default class SaloonPlugin extends Plugin {
 
 							// Action type icon with tooltip
 							const actionIcons: Record<string, { icon: string; label: string }> = {
-								'create_term': { icon: '＋', label: 'Create Term' },
-								'update_term': { icon: '✎', label: 'Update Term' },
-								'add_tag': { icon: '🏷', label: 'Add Tag' },
-								'add_context': { icon: '💬', label: 'Add Context' },
-								'trigger_context_search': { icon: '🔍', label: 'Context Search' },
-								'combine_with': { icon: '🔗', label: 'Combine With' }
+								'create_term': { icon: '＋', label: 'Create term' },
+								'update_term': { icon: '✎', label: 'Update term' },
+								'add_tag': { icon: '🏷', label: 'Add tag' },
+								'add_context': { icon: '💬', label: 'Add context' },
+								'trigger_context_search': { icon: '🔍', label: 'Context search' },
+								'combine_with': { icon: '🔗', label: 'Combine with' }
 							};
 							const actionInfo = actionIcons[item.actionType] || { icon: '•', label: item.actionType };
 							const actionIcon = headerRow.createEl('span', {
@@ -1108,19 +1104,15 @@ export default class SaloonPlugin extends Plugin {
 										// Create term file in glossary folder
 										const glossaryFolder = this.settings.glossaryFolder || 'Saloon Glossary';
 										const fileName = `${glossaryFolder}/${sanitizeFilename(td.term)}.md`;
-										console.log('[Saloon] Creating term file:', fileName);
 
 										// Ensure glossary folder exists
 										const folderExists = await this.app.vault.adapter.exists(glossaryFolder);
-										console.log('[Saloon] Folder exists:', folderExists);
 										if (!folderExists) {
 											await this.app.vault.createFolder(glossaryFolder);
-											console.log('[Saloon] Created folder:', glossaryFolder);
 										}
 
 										// Check if file already exists
 										const fileExists = await this.app.vault.adapter.exists(fileName);
-										console.log('[Saloon] File exists check:', fileExists);
 										if (!fileExists) {
 											const fileContent = generateTermFileContent({
 												termId: termId,
@@ -1130,9 +1122,7 @@ export default class SaloonPlugin extends Plugin {
 												sources: td.source ? [td.source] : [],
 												createdAt: now
 											});
-											console.log('[Saloon] About to create file with content length:', fileContent.length);
 											await this.app.vault.create(fileName, fileContent);
-											console.log('[Saloon] File created successfully');
 											new Notice(`Created term file: ${td.term}`);
 										} else {
 											new Notice(`Term file already exists: ${td.term}`);
@@ -1423,7 +1413,7 @@ export default class SaloonPlugin extends Plugin {
 						new Notice('Extraction failed. Check console.');
 					} finally {
 						button.disabled = false;
-						button.textContent = 'Extract Terms';
+						button.textContent = 'Extract terms';
 						progressContainer.addClass('saloon-hidden');
 					}
 				});
@@ -1454,7 +1444,7 @@ export default class SaloonPlugin extends Plugin {
 				// Check database is ready
 				await this.checkAndReloadDatabase();
 				if (!this.dbService || !this.dbService.db) {
-					el.createEl('div', { text: 'Error: Database not loaded' });
+					el.createEl('div', { text: 'Error: database not loaded' });
 					return;
 				}
 
@@ -1485,7 +1475,7 @@ export default class SaloonPlugin extends Plugin {
 				const container = el.createDiv({ cls: 'saloon-edit-container' });
 
 				const editBtn = container.createEl('button', {
-					text: 'Edit Term',
+					text: 'Edit term',
 					cls: 'saloon-edit-button'
 				});
 
@@ -1625,7 +1615,7 @@ export default class SaloonPlugin extends Plugin {
 		// Reload database from disk
 		this.addCommand({
 			id: 'reload-database',
-			name: 'Reload Database from Disk',
+			name: 'Reload database from disk',
 			callback: async () => {
 				try {
 					const adapter = this.app.vault.adapter;
@@ -1649,7 +1639,7 @@ export default class SaloonPlugin extends Plugin {
 		// Add command to insert sample data
 		this.addCommand({
 			id: 'insert-sample-data',
-			name: 'Insert Sample Data',
+			name: 'Insert sample data',
 			callback: async () => {
 				try {
 					if (!this.dbService || !this.dbService.db) {
@@ -1707,16 +1697,20 @@ export default class SaloonPlugin extends Plugin {
 
 	// MARK: Render Term Block
 
-	async renderTermBlock(el: HTMLElement, ctx: any, _editorType: 'textarea' | 'codemirror' | 'contenteditable') {
+	async renderTermBlock(el: HTMLElement, ctx: { sourcePath: string }, _editorType: 'textarea' | 'codemirror' | 'contenteditable') {
 		try {
 			// Check database is ready
 			await this.checkAndReloadDatabase();
 			if (!this.dbService || !this.dbService.db) {
-				el.createEl('div', { text: 'Error: Database not loaded' });
+				el.createEl('div', { text: 'Error: database not loaded' });
 				return;
 			}
 
 			const db = this.dbService.db;
+
+			// Create a component for markdown rendering lifecycle
+			const renderComponent = new Component();
+			renderComponent.load();
 
 			// Get the current file to read its frontmatter
 			const file = this.app.vault.getAbstractFileByPath(ctx.sourcePath);
@@ -1814,7 +1808,7 @@ export default class SaloonPlugin extends Plugin {
 					section.removeClass('saloon-editing');
 					if (updatePreview) {
 						preview.empty();
-						MarkdownRenderer.renderMarkdown(currentEditorValue || '*No content*', preview, ctx.sourcePath, this);
+						void MarkdownRenderer.render(this.app, currentEditorValue || '*No content*', preview, ctx.sourcePath, renderComponent);
 					}
 				};
 
@@ -1839,7 +1833,7 @@ export default class SaloonPlugin extends Plugin {
 
 				// Preview (default view) - double-click to edit
 				const preview = contentWrapper.createDiv({ cls: 'saloon-preview-minimal' });
-				MarkdownRenderer.renderMarkdown(fileValue || '*No content*', preview, ctx.sourcePath, this);
+				void MarkdownRenderer.render(this.app, fileValue || '*No content*', preview, ctx.sourcePath, renderComponent);
 
 				preview.addEventListener('dblclick', () => {
 					if (!isEditing) {
@@ -1897,11 +1891,11 @@ export default class SaloonPlugin extends Plugin {
 			let dbTriplesStr = '';
 			if (dbTerm?.knowledgeTriples) {
 				const triples = typeof dbTerm.knowledgeTriples === 'string'
-					? JSON.parse(dbTerm.knowledgeTriples)
+					? JSON.parse(dbTerm.knowledgeTriples) as { subject: string; predicate: string; target: string }[]
 					: dbTerm.knowledgeTriples;
 				if (Array.isArray(triples)) {
 					dbTriplesStr = '| Subject | Predicate | Target |\n|---------|-----------|--------|\n' +
-						triples.map((t: any) => `| ${t.subject} | ${t.predicate} | ${t.target} |`).join('\n');
+						triples.map((t: { subject: string; predicate: string; target: string }) => `| ${t.subject} | ${t.predicate} | ${t.target} |`).join('\n');
 				}
 			}
 
@@ -1976,7 +1970,7 @@ export default class SaloonPlugin extends Plugin {
 			// Changelog section (read-only from DB) - minimal
 			const changelogSection = container.createDiv({ cls: 'saloon-section-minimal' });
 			const changelogHeader = changelogSection.createDiv({ cls: 'saloon-section-header-minimal' });
-			changelogHeader.createEl('h3', { text: 'Changelog' });
+			changelogHeader.createEl('h3', { text: 'History' });
 
 			const changelogContent = changelogSection.createDiv({ cls: 'saloon-changelog-minimal' });
 
@@ -2039,8 +2033,6 @@ export default class SaloonPlugin extends Plugin {
 
 			// If file was modified, reload it
 			if (stat.mtime > this.lastDbModTime) {
-				console.log('Database file changed, reloading...');
-
 				const wasmBinary = await adapter.readBinary(this.wasmPath);
 
 				// Re-initialize database
@@ -2049,8 +2041,6 @@ export default class SaloonPlugin extends Plugin {
 
 				// Update last modified time
 				this.lastDbModTime = stat.mtime;
-
-				console.log('Database reloaded automatically');
 			}
 		} catch (error) {
 			console.error('Error checking database file:', error);
@@ -2100,8 +2090,8 @@ class SaloonSettingTab extends PluginSettingTab {
 
 		// Ollama URL setting
 		new Setting(containerEl)
-			.setName('Ollama API URL')
-			.setDesc('Base URL for the Ollama API server used for term extraction.')
+			.setName('Ollama API url')
+			.setDesc('Base url for the Ollama API server used for term extraction')
 			.addText(text => text
 				.setPlaceholder('http://localhost:11434')
 				.setValue(this.plugin.settings.ollamaUrl)

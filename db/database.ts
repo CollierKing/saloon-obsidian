@@ -31,15 +31,13 @@ export class DrizzleDatabase {
       // Load existing database
       const buffer = await adapter.readBinary(dbPath);
       this.sqliteDb = new SQL.Database(new Uint8Array(buffer));
-      console.log('Loaded existing database from:', dbPath);
     } else {
       // Create new database
       this.sqliteDb = new SQL.Database();
-      console.log('Created new database at:', dbPath);
     }
 
     // Run pending migrations (for both new and existing databases)
-    const migrationsRun = await this.runMigrations();
+    const migrationsRun = this.runMigrations();
 
     // Save if any migrations were applied
     if (migrationsRun > 0 || !fileExists) {
@@ -57,7 +55,7 @@ export class DrizzleDatabase {
    * Tracks applied migrations in _migrations table
    * @returns Number of migrations applied
    */
-  private async runMigrations(): Promise<number> {
+  private runMigrations(): number {
     if (!this.sqliteDb) {
       throw new Error('Database not initialized');
     }
@@ -81,7 +79,6 @@ export class DrizzleDatabase {
     let migrationsRun = 0;
     for (let i = 0; i < ALL_MIGRATIONS.length; i++) {
       if (!appliedIds.has(i)) {
-        console.log(`Running migration ${i}...`);
         this.sqliteDb.run(ALL_MIGRATIONS[i]);
         this.sqliteDb.run(
           'INSERT INTO _migrations (id, applied_at) VALUES (?, ?)',
@@ -89,12 +86,6 @@ export class DrizzleDatabase {
         );
         migrationsRun++;
       }
-    }
-
-    if (migrationsRun > 0) {
-      console.log(`Applied ${migrationsRun} new migration(s)`);
-    } else {
-      console.log('Database schema up to date');
     }
 
     return migrationsRun;
@@ -112,7 +103,6 @@ export class DrizzleDatabase {
 
     const data = this.sqliteDb.export();
     await vault.adapter.writeBinary(dbPath, data.buffer);
-    console.log('Database saved to:', dbPath);
   }
 
   /**

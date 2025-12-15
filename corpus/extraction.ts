@@ -1,14 +1,13 @@
-// fs import removed - not used (file operations handled by Obsidian vault API)
 import { ChatOllama } from '@langchain/ollama';
 import { createAgent, toolStrategy } from 'langchain';
 import { Term, ExtractedTermsSchema } from './types';
-import { loadMarkdownFiles, extractFrontmatter, deduplicateTerms, chunkText } from './helpers';
+import { extractFrontmatter, deduplicateTerms, chunkText } from './helpers';
 
 // MARK: - Polyfills
 
 // Polyfill for AbortSignal.any (not available in Obsidian's Electron environment)
-if (!(AbortSignal as any).any) {
-  (AbortSignal as any).any = function(signals: AbortSignal[]): AbortSignal {
+if (!(AbortSignal as unknown as { any?: unknown }).any) {
+  (AbortSignal as unknown as { any: (signals: AbortSignal[]) => AbortSignal }).any = function(signals: AbortSignal[]): AbortSignal {
     const controller = new AbortController();
 
     for (const signal of signals) {
@@ -49,11 +48,20 @@ export interface ExtractionOptions {
 
 // MARK: - Agent Creation
 
+/** Configuration for ChatOllama */
+interface OllamaConfig {
+  model: string;
+  temperature: number;
+  numPredict: number;
+  numCtx: number;
+  baseUrl?: string;
+}
+
 /**
  * Create extraction agent with Ollama LLM and toolStrategy
  */
 function createExtractionAgent(options?: ExtractionOptions) {
-  const config: any = {
+  const config: OllamaConfig = {
     model: options?.model || "gpt-oss:20b",
     temperature: 0.0,
     numPredict: 16000,  // max output tokens
@@ -67,6 +75,7 @@ function createExtractionAgent(options?: ExtractionOptions) {
 
   const llm = new ChatOllama(config);
 
+  /* eslint-disable @typescript-eslint/no-explicit-any -- langchain types are not fully typed for this use case */
   const agent = createAgent({
     systemPrompt: `You are an expert at extracting technical terms from documents.
 
@@ -89,6 +98,7 @@ Do not include common words or general vocabulary.`,
       handleError: true,
     }) as any,
   } as any);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   return agent;
 }
@@ -133,45 +143,6 @@ async function extractTermsFromText(
 }
 
 // MARK: - Public API
-
-/**
- * Main pipeline: extract terms from markdown files
- * Note: This function uses Node.js fs operations and should only be used
- * in Node.js environments (not in Obsidian plugin)
- */
-export async function extractTerms(
-  inputPath: string,
-  options?: ExtractionOptions
-): Promise<Term[]> {
-  // 1. Load files
-  console.log(`Loading markdown files from: ${inputPath}`);
-  const files = await loadMarkdownFiles(inputPath);
-  console.log(`Found ${files.length} markdown files`);
-
-  // 2. Extract terms from each file
-  const allTerms: Term[] = [];
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    console.log(`[${i + 1}/${files.length}] Extracting terms from: ${file.path}`);
-
-    const { body } = extractFrontmatter(file.content);
-    const terms = await extractTermsFromText(body, file.path, options);
-
-    console.log(`  Found ${terms.length} terms`);
-    allTerms.push(...terms);
-  }
-
-  console.log(`Total terms extracted: ${allTerms.length}`);
-
-  // 3. Deduplicate
-  const uniqueTerms = deduplicateTerms(allTerms);
-  console.log(`Unique terms after deduplication: ${uniqueTerms.length}`);
-
-  // Note: File saving removed for Obsidian compatibility
-  // Results are returned and can be saved using Obsidian's vault API
-
-  return uniqueTerms;
-}
 
 /**
  * Extract terms from text directly (for Obsidian integration)

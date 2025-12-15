@@ -1,5 +1,3 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import matter from 'gray-matter';
 import { Term } from './types';
 
@@ -71,60 +69,14 @@ export function chunkText(text: string, options?: ChunkOptions): string[] {
 export interface MarkdownFile {
   path: string;
   content: string;
-  frontmatter?: Record<string, any>;
-}
-
-/**
- * Load single file or all .md files from directory
- */
-export async function loadMarkdownFiles(inputPath: string): Promise<MarkdownFile[]> {
-  const stats = await fs.stat(inputPath);
-
-  if (stats.isFile()) {
-    // Single file
-    const content = await fs.readFile(inputPath, 'utf-8');
-    const { data, content: body } = matter(content);
-    return [{
-      path: inputPath,
-      content: body,
-      frontmatter: data
-    }];
-  } else if (stats.isDirectory()) {
-    // Directory - recursively find all .md files
-    const markdownFiles: MarkdownFile[] = [];
-
-    async function scanDirectory(dir: string) {
-      const entries = await fs.readdir(dir, { withFileTypes: true });
-
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-
-        if (entry.isDirectory()) {
-          await scanDirectory(fullPath);
-        } else if (entry.isFile() && entry.name.endsWith('.md')) {
-          const content = await fs.readFile(fullPath, 'utf-8');
-          const { data, content: body } = matter(content);
-          markdownFiles.push({
-            path: fullPath,
-            content: body,
-            frontmatter: data
-          });
-        }
-      }
-    }
-
-    await scanDirectory(inputPath);
-    return markdownFiles;
-  } else {
-    throw new Error(`Invalid path: ${inputPath}`);
-  }
+  frontmatter?: Record<string, unknown>;
 }
 
 /**
  * Parse YAML frontmatter from markdown content
  */
 export function extractFrontmatter(content: string): {
-  frontmatter: Record<string, any>;
+  frontmatter: Record<string, unknown>;
   body: string;
 } {
   const { data, content: body } = matter(content);

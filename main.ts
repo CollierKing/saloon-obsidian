@@ -262,7 +262,7 @@ export default class SaloonPlugin extends Plugin {
 			}
 		} catch (error) {
 			console.error('Failed to initialize Saloon plugin:', error);
-			new Notice('Failed to initialize Saloon plugin. Check console for errors.');
+			new Notice('Failed to initialize plugin. Check console for errors.');
 			return;
 		}
 
@@ -502,7 +502,7 @@ export default class SaloonPlugin extends Plugin {
 					cls: 'saloon-input saloon-select'
 				});
 				const modelStatus = modelGroup.createEl('small', {
-					text: 'Enter Ollama URL and click away to load models',
+					text: 'Enter server address and click away to load models',
 					cls: 'saloon-hint'
 				});
 
@@ -1483,7 +1483,7 @@ export default class SaloonPlugin extends Plugin {
 				const termName = frontmatter.term || file.basename;
 
 				if (!termId) {
-					el.createEl('div', { text: 'No termId found in frontmatter', cls: 'saloon-warning' });
+					el.createEl('div', { text: 'No term ID found in frontmatter', cls: 'saloon-warning' });
 					return;
 				}
 
@@ -1746,7 +1746,7 @@ export default class SaloonPlugin extends Plugin {
 			const termId = frontmatter.termId;
 
 			if (!termId) {
-				el.createEl('div', { text: 'No termId found in frontmatter', cls: 'saloon-warning' });
+				el.createEl('div', { text: 'No term ID found in frontmatter', cls: 'saloon-warning' });
 				return;
 			}
 
@@ -2105,7 +2105,7 @@ class SaloonSettingTab extends PluginSettingTab {
 			.setName('Glossary folder')
 			.setDesc('Folder where term files will be created when approved. Relative to vault root.')
 			.addText(text => text
-				.setPlaceholder('saloon-glossary')
+				.setPlaceholder('Glossary')
 				.setValue(this.plugin.settings.glossaryFolder)
 				.onChange(async (value) => {
 					this.plugin.settings.glossaryFolder = value;
@@ -2114,10 +2114,10 @@ class SaloonSettingTab extends PluginSettingTab {
 
 		// Ollama URL setting
 		new Setting(containerEl)
-			.setName('Ollama API URL')
-			.setDesc('Base URL for the Ollama API server used for term extraction')
+			.setName('Server address')
+			.setDesc('Base address for the language model server used for term extraction')
 			.addText(text => text
-				.setPlaceholder('http://localhost:11434')
+				.setPlaceholder('Localhost:11434')
 				.setValue(this.plugin.settings.ollamaUrl)
 				.onChange(async (value) => {
 					this.plugin.settings.ollamaUrl = value;
